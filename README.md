@@ -18,7 +18,7 @@ sudo chmod 4777 island
 
 ## Todo📅
 
-- [ ] 分离业务逻辑到 `lib.rs`，并完善异常处理
+- [x] 分离业务逻辑到 `lib.rs`，并完善异常处理
 - [ ] 使用 `pivot_root` 代替 `chroot`
 - [ ] 将隔离环境的 overlayfs 封装到单独的 img 镜像中
 - [ ] 支持诸如 `--ro-bind`、`--procfs` 此类的个性化挂载参数
