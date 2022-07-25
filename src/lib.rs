@@ -1,7 +1,10 @@
+extern crate core;
+
 use std::env;
 use std::ffi::OsString;
 use std::path::Component::Normal;
 use std::path::PathBuf;
+
 use nix::unistd::Uid;
 
 mod argparse;
@@ -59,11 +62,11 @@ pub fn isolate() {
         island.mount_fstype("tmpfs", &dst, "tmpfs");
     }
 
-    if args.bind.len() != 0 {
+    if !args.bind.is_empty() {
         for (src, dst) in args.bind.iter().zip(args.bind[1..].iter()) {
             island.mount_bind(src, dst);
         }
     }
 
-    island.exec();
+    island.exec(&args.command);
 }

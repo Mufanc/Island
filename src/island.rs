@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use nix::mount::{mount, MsFlags};
 use nix::sched::{CloneFlags, unshare};
-use nix::unistd::{chdir, chroot, execve, getuid, setuid};
+use nix::unistd::{chdir, chroot, execve, execvpe, getuid, setuid};
 
 use crate::check_err;
 
@@ -84,21 +84,28 @@ impl Island {
         symlink("/proc/kcore", self.parse_path("/dev/core")).unwrap();
     }
 
-    pub fn exec(&self) {
+    pub fn exec(&self, command: &Vec<String>) {
         check_err!(chroot(self.parse_path("/").as_path()));
         check_err!(chdir("/"));
         check_err!(setuid(getuid()));
 
-        match env::var("SHELL") {
-            Ok(shell) => {
-                let path = CString::new(shell).unwrap();
-                let argv = [&path, ];
-                let envp: Vec<CString> = env::vars().map(|(k, v)| {
-                    CString::new(format!("{}={}", k, v)).unwrap()
-                }).collect();
-                execve(&path, &argv, &envp).unwrap();
+        let envp: Vec<CString> = env::vars().map(|(k, v)| {
+            CString::new(format!("{}={}", k, v)).unwrap()
+        }).collect();
+
+        if command.is_empty() {
+            match env::var("SHELL") {
+                Ok(shell) => {
+                    let file = CString::new(shell).unwrap();
+                    let argv = [&file, ];
+                    check_err!(execve(&file, &argv, &envp));
+                }
+                Err(err) => eprintln!("error: {}", err)
             }
-            Err(err) => eprintln!("error: {}", err)
+        } else {
+            let file = CString::new(command[0].as_str()).unwrap();
+            let argv: Vec<CString> = command.iter().map(|it| CString::new(it.as_str()).unwrap()).collect();
+            check_err!(execvpe(&file, &argv, &envp));
         }
     }
 }

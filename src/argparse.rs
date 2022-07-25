@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+
 use clap::Parser;
 
 #[derive(Parser)]
@@ -21,6 +22,9 @@ pub struct Args {
 
     #[clap(long, value_names=&["SRC", "DST"], number_of_values=2, help="Bind mount the host path SRC on DST")]
     pub bind: Vec<String>,
+
+    #[clap(multiple=true, help="Executable and arguments, default to \"$SHELL\"")]
+    pub command: Vec<String>,
 }
 
 pub fn parse() -> Args {
