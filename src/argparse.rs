@@ -1,11 +1,10 @@
 use std::path::PathBuf;
-
 use clap::Parser;
 
 #[derive(Parser)]
 #[clap(version, about, long_about=None)]
 pub struct Args {
-    #[clap(long, help="A directory to store overlayfs data", default_value=".island")]
+    #[clap(long, help="A directory to store overlayfs data", default_value="~/.island")]
     pub workdir: PathBuf,
 
     #[clap(long, help="Mount new procfs on /proc")]

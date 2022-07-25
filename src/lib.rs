@@ -1,3 +1,7 @@
+use std::env;
+use std::ffi::OsString;
+use std::path::Component::Normal;
+use std::path::PathBuf;
 use nix::unistd::Uid;
 
 mod argparse;
@@ -26,7 +30,18 @@ pub fn isolate() {
         std::process::exit(1);
     }
 
-    let island = island::Island::new(&args.workdir);
+    let homedir = OsString::from(env::var("HOME").unwrap());
+    let workdir = args.workdir.components().map(|it| match it {
+        Normal(x) => {
+            if x == &OsString::from("~") {
+                Normal(&homedir)
+            } else {
+                it
+            }
+        }
+        _ => it,
+    }).collect::<PathBuf>();
+    let island = island::Island::new(&workdir);
 
     if args.procfs {
         island.mount_fstype("proc", "/proc", "proc");
