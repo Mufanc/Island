@@ -13,6 +13,9 @@ pub struct Args {
     #[clap(long, help="Mount new sysfs on /sys")]
     pub sysfs: bool,
 
+    #[clap(long, help="Mount a minimum viable tmpfs on /dev")]
+    pub dev: bool,
+
     #[clap(long, value_names=&["DST"], help="Mount new tmpfs on DST")]
     pub tmpfs: Vec<String>,
 

@@ -1,5 +1,6 @@
 use std::{env, fs};
 use std::ffi::CString;
+use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 
 use nix::mount::{mount, MsFlags};
@@ -40,13 +41,16 @@ impl Island {
         }
     }
 
-    pub fn mount(&self, source: Option<&str>, target: &str, fstype: Option<&str>, flags: MsFlags, data: Option<&str>) {
-        let target = if target.chars().next().unwrap() == '/' {
-            &target[1..]
+    fn parse_path(&self, path: &str) -> PathBuf {
+        self.root.join(if path.chars().next().unwrap() == '/' {
+            &path[1..]
         } else {
-            target
-        };
-        mount!(source, self.root.join(target).as_path(), fstype, flags, data);
+            path
+        })
+    }
+
+    fn mount(&self, source: Option<&str>, target: &str, fstype: Option<&str>, flags: MsFlags, data: Option<&str>) {
+        mount!(source, self.parse_path(target).as_path(), fstype, flags, data);
     }
 
     pub fn mount_fstype(&self, desc: &str, target: &str, fstype: &str) {
@@ -57,8 +61,31 @@ impl Island {
         self.mount(Some(source), target, None, MsFlags::MS_BIND | MsFlags::MS_REC, None);
     }
 
+    pub fn mount_dev(&self) {
+        self.mount_fstype("tmpfs", "/dev", "tmpfs");
+
+        fs::create_dir_all(self.parse_path("/dev/pts")).unwrap();
+        self.mount_fstype("devpts", "/dev/pts", "devpts");
+
+        fs::create_dir_all(self.parse_path("/dev/shm")).unwrap();
+        self.mount_fstype("tmpfs", "/dev/shm", "tmpfs");
+
+        for file in ["full", "zero", "null", "random", "urandom", "tty", "console"] {
+            let target = format!("/dev/{}", file);
+            fs::File::create(self.parse_path(&target)).unwrap();
+            self.mount_bind(&target, &target);
+        }
+
+        symlink("/proc/self/fd", self.parse_path("/dev/fd")).unwrap();
+        symlink("/proc/self/fd/0", self.parse_path("/dev/stdin")).unwrap();
+        symlink("/proc/self/fd/1", self.parse_path("/dev/stdout")).unwrap();
+        symlink("/proc/self/fd/2", self.parse_path("/dev/stderr")).unwrap();
+        symlink("pts/ptmx", self.parse_path("/dev/ptmx")).unwrap();
+        symlink("/proc/kcore", self.parse_path("/dev/core")).unwrap();
+    }
+
     pub fn exec(&self) {
-        check_err!(chroot(self.root.as_path()));
+        check_err!(chroot(self.parse_path("/").as_path()));
         check_err!(chdir("/"));
         check_err!(setuid(getuid()));
 

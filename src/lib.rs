@@ -51,6 +51,10 @@ pub fn isolate() {
         island.mount_fstype("sysfs", "/sys", "sysfs");
     }
 
+    if args.dev {
+        island.mount_dev();
+    }
+
     for dst in args.tmpfs {
         island.mount_fstype("tmpfs", &dst, "tmpfs");
     }
