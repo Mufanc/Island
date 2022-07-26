@@ -22,22 +22,22 @@ pub struct Island {
 impl Island {
     pub fn new(base_dir: &PathBuf) -> Island {
         let base_dir = base_dir;
-        let jail_dir = base_dir.join("jail");
+        let upper_dir = base_dir.join("diff");
         let work_dir = base_dir.join("work");
 
-        fs::create_dir_all(&jail_dir).unwrap();
+        fs::create_dir_all(&upper_dir).unwrap();
         fs::create_dir_all(&work_dir).unwrap();
 
         check_err!(unshare(CloneFlags::CLONE_NEWNS));
         check_err!(mount::<str, str, str, str>(None, "/", None, MsFlags::MS_REC | MsFlags::MS_PRIVATE, None));
 
         mount!(
-            Some("island"), jail_dir.as_path(), Some("overlay"), MsFlags::empty(),
-            Some(format!("lowerdir=/,upperdir={},workdir={}", jail_dir.to_str().unwrap(), work_dir.to_str().unwrap()).as_str())
+            Some("island"), upper_dir.as_path(), Some("overlay"), MsFlags::empty(),
+            Some(format!("lowerdir=/,upperdir={},workdir={}", upper_dir.to_str().unwrap(), work_dir.to_str().unwrap()).as_str())
         );
 
         Island {
-            root: jail_dir
+            root: upper_dir
         }
     }
 
