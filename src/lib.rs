@@ -44,14 +44,17 @@ pub fn isolate() {
         }
         _ => it,
     }).collect::<PathBuf>();
+
     let island = island::Island::new(&workdir);
 
+    island.init();
+
     if args.procfs {
-        island.mount_fstype("proc", "/proc", "proc");
+        island.mount_fs("proc", &PathBuf::from("/proc"), "proc");
     }
 
     if args.sysfs {
-        island.mount_fstype("sysfs", "/sys", "sysfs");
+        island.mount_fs("sysfs", &PathBuf::from("/sys"), "sysfs");
     }
 
     if args.dev {
@@ -59,7 +62,7 @@ pub fn isolate() {
     }
 
     for dst in args.tmpfs {
-        island.mount_fstype("tmpfs", &dst, "tmpfs");
+        island.mount_fs("tmpfs", &dst, "tmpfs");
     }
 
     if !args.bind.is_empty() {

@@ -18,10 +18,10 @@ pub struct Args {
     pub dev: bool,
 
     #[clap(long, value_names=&["DST"], help="Mount new tmpfs on DST")]
-    pub tmpfs: Vec<String>,
+    pub tmpfs: Vec<PathBuf>,
 
     #[clap(long, value_names=&["SRC", "DST"], number_of_values=2, help="Bind mount the host path SRC on DST")]
-    pub bind: Vec<String>,
+    pub bind: Vec<PathBuf>,
 
     #[clap(multiple=true, help="Executable and arguments, default to \"$SHELL\"")]
     pub command: Vec<String>,
