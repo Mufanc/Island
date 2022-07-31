@@ -1,4 +1,4 @@
-.PHONY : clean run
+.PHONY : clean run install
 
 SRCS	:= $(shell find src -name "*.rs")
 TARGET	:= "target/release/island"
@@ -9,7 +9,7 @@ ifeq (run, $(firstword $(MAKECMDGOALS)))
 endif
 
 island: $(SRCS)
-	cargo build --release
+	cargo build
 
 clean:
 	rm -rf target/*
@@ -19,5 +19,6 @@ run: island
 	sudo chmod 4755 $(TARGET)
 	$(TARGET) $(ARGS)
 
-install: island
+install: $(SRCS)
+	cargo build --release
 	sudo install -b -o root -m 4755 $(TARGET) /usr/bin/
